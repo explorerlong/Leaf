@@ -2,6 +2,7 @@ package com.sankuai.inf.leaf.server;
 
 import com.sankuai.inf.leaf.common.Result;
 import com.sankuai.inf.leaf.common.Status;
+import com.sankuai.inf.leaf.ext.BizSystemManager;
 import com.sankuai.inf.leaf.server.exception.LeafServerException;
 import com.sankuai.inf.leaf.server.exception.NoKeyException;
 import org.slf4j.Logger;
@@ -18,10 +19,14 @@ public class LeafController {
     SegmentService segmentService;
     @Autowired
     SnowflakeService snowflakeService;
+    
+    @Autowired
+    BizSystemManager bizSystemManager;
 
-    @RequestMapping(value = "/api/segment/get/{key}")
-    public String getSegmentID(@PathVariable("key") String key) {
-        return get(key, segmentService.getId(key));
+    @RequestMapping(value = "/api/segment/get/{system}/{module}/{key}")
+    public String getSegmentID(@PathVariable("system") String system, @PathVariable("module") String module, @PathVariable("key") String key) {
+    	String fullKey = checkBizSystem(system, module, key);
+        return get(key, segmentService.getId(fullKey));
     }
 
     @RequestMapping(value = "/api/snowflake/get/{key}")
@@ -41,5 +46,10 @@ public class LeafController {
             throw new LeafServerException(result.toString());
         }
         return String.valueOf(result.getId());
+    }
+    
+    private String checkBizSystem(String system, String module, String key) throws IllegalStateException {
+    	bizSystemManager.ensureContainsSystemModule(system, module);
+    	return system.concat("-").concat(module).concat("-").concat(key);
     }
 }

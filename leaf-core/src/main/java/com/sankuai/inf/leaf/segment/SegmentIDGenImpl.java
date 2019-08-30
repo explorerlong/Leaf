@@ -24,6 +24,7 @@ import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationExceptio
 import com.sankuai.inf.leaf.IDGen;
 import com.sankuai.inf.leaf.common.Result;
 import com.sankuai.inf.leaf.common.Status;
+import com.sankuai.inf.leaf.ext.SegmentConfigX;
 import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
 import com.sankuai.inf.leaf.segment.model.LeafAlloc;
 import com.sankuai.inf.leaf.segment.model.Segment;
@@ -179,8 +180,8 @@ public class SegmentIDGenImpl implements IDGen {
     private boolean addDynamicLeafAlloc(String tag) {
     	LeafAlloc leaf = new LeafAlloc();
     	leaf.setKey(tag);
-    	leaf.setMaxId(1);
-    	leaf.setStep(100);
+    	leaf.setMaxId(SegmentConfigX.DEFAULT_MAX_ID);
+    	leaf.setStep(SegmentConfigX.stepSize);
     	
     	try {
     		dao.insertLeaf(leaf);

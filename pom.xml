@@ -49,9 +49,20 @@
         <commons-io.version>2.4</commons-io.version>
         <log4j.version>2.7</log4j.version>
         <mybatis-spring.version>1.2.5</mybatis-spring.version>
+        <spring-boot-dependencies.version>2.1.6.RELEASE</spring-boot-dependencies.version>
+        <maven.compiler.source>1.8</maven.compiler.source>  
+        <maven.compiler.target>1.8</maven.compiler.target>  
+        <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>  
     </properties>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.sankuai.inf.leaf</groupId>
                 <artifactId>leaf-core</artifactId>
@@ -162,8 +173,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
