@@ -1,5 +1,5 @@
 *.class
-
+。settings/
 # Package Files #
 *.jar
 *.war
@@ -12,3 +12,5 @@
 target/
 logs/
 log/
+/.project
+/.settings/

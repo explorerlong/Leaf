@@ -1,18 +1,33 @@
 package com.sankuai.inf.leaf.segment;
 
-import com.sankuai.inf.leaf.IDGen;
-import com.sankuai.inf.leaf.common.Result;
-import com.sankuai.inf.leaf.common.Status;
-import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
-import com.sankuai.inf.leaf.segment.model.*;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.perf4j.StopWatch;
 import org.perf4j.slf4j.Slf4JStopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+import com.sankuai.inf.leaf.IDGen;
+import com.sankuai.inf.leaf.common.Result;
+import com.sankuai.inf.leaf.common.Status;
+import com.sankuai.inf.leaf.segment.dao.IDAllocDao;
+import com.sankuai.inf.leaf.segment.model.LeafAlloc;
+import com.sankuai.inf.leaf.segment.model.Segment;
+import com.sankuai.inf.leaf.segment.model.SegmentBuffer;
 
 public class SegmentIDGenImpl implements IDGen {
     private static final Logger logger = LoggerFactory.getLogger(SegmentIDGenImpl.class);
@@ -125,7 +140,15 @@ public class SegmentIDGenImpl implements IDGen {
         if (!initOK) {
             return new Result(EXCEPTION_ID_IDCACHE_INIT_FALSE, Status.EXCEPTION);
         }
-        if (cache.containsKey(key)) {
+        
+        boolean containsKey = cache.containsKey(key);
+        
+        // 判断为新key, 新key先注册 by lyf on 2019.08.29
+        if (!containsKey) {
+        	containsKey = addDynamicLeafAlloc(key);
+        }
+        
+        if (containsKey) {
             SegmentBuffer buffer = cache.get(key);
             if (!buffer.isInitOk()) {
                 synchronized (buffer) {
@@ -143,6 +166,51 @@ public class SegmentIDGenImpl implements IDGen {
             return getIdFromSegmentBuffer(cache.get(key));
         }
         return new Result(EXCEPTION_ID_KEY_NOT_EXISTS, Status.EXCEPTION);
+    }
+    
+    /**
+     * 
+                 *   动态添加leaf alloc记录，同时刷新segment缓存
+     * by lyf on 2019.08.29
+     * 
+     * @param tag
+     * @return
+     */
+    private boolean addDynamicLeafAlloc(String tag) {
+    	LeafAlloc leaf = new LeafAlloc();
+    	leaf.setKey(tag);
+    	leaf.setMaxId(1);
+    	leaf.setStep(100);
+    	
+    	try {
+    		dao.insertLeaf(leaf);
+    	} catch (PersistenceException e) {
+    		if (e.getCause() != null && e.getCause() instanceof MySQLIntegrityConstraintViolationException) {
+    			logger.info("The leaf alloc[{}] record exists already, ignore...", tag);
+    		} else {
+    			throw e;
+    		}
+    	}
+    	
+    	putSegmentBufferDynamically(tag);
+        return true;
+    }
+    
+    /**
+                  *    注册segment到内存
+     *     
+     * by lyf on 2019.08.29
+     * @param tag
+     */
+    private void putSegmentBufferDynamically(String tag) {
+    	 SegmentBuffer buffer = new SegmentBuffer();
+         buffer.setKey(tag);
+         Segment segment = buffer.getCurrent();
+         segment.setValue(new AtomicLong(0));
+         segment.setMax(0);
+         segment.setStep(0);
+         cache.put(tag, buffer);
+         logger.info("Add tag {} from db to IdCache, SegmentBuffer {}", tag, buffer);
     }
 
     public void updateSegmentFromDb(String key, Segment segment) {

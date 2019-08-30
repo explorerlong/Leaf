@@ -9,12 +9,12 @@
     </parent>
     <groupId>com.sankuai.inf.leaf</groupId>
     <artifactId>leaf-server</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.1.ds</version>
     <packaging>jar</packaging>
     <name>leaf-server</name>
     <description>Leaf HTTP Server</description>
     <properties>
-        <spring-boot-dependencies.version>1.5.18.RELEASE</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>2.1.6.RELEASE</spring-boot-dependencies.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -28,24 +28,34 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+    
+        <dependency>
+        	<artifactId>dossen-discovery-eureka</artifactId>
+        	<groupId>com.dossen</groupId>
+        	<version>5.2.6.RELEASE</version>
+        </dependency>
+
+    
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        
         <!-- Spring Boot Freemarker 依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
         </dependency>
 
-        <dependency>
+     <!--    <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>com.sankuai.inf.leaf</groupId>
             <artifactId>leaf-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -85,7 +95,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
+            <!-- <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
@@ -97,13 +107,37 @@
                         <configuration>
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
                             <excludeTransitive>false</excludeTransitive>
-                            <!-- 表示复制的jar文件去掉版本信息 -->
+                            表示复制的jar文件去掉版本信息
                             <stripVersion>false</stripVersion>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin> -->
 
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>releases</id>
+            <name>releases</name>
+            <url>http://10.0.31.62:8081/repository/dossen-deploy/releases/</url>
+        </repository>
+        <repository>
+            <id>snapshots</id>
+            <name>snapshots</name>
+            <url>http://10.0.31.62:8081/repository/dossen-snapshots/</url>
+        </repository>
+    </repositories>
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>releases</name>
+            <url>http://10.0.31.62:8081/repository/dossen-deploy/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>snapshots</name>
+            <url>http://10.0.31.62:8081/repository/dossen-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
